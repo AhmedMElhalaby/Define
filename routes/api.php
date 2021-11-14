@@ -62,6 +62,13 @@ Route::group([
         Route::post('request_refund', 'TransactionController@request_refund');
     });
     Route::group([
+        'prefix' => 'payments',
+    ], function() {
+        Route::post('add_payment', 'PaymentController@add_payment');
+        Route::get('cards_list', 'PaymentController@cards_list');
+        Route::get('has_payment', 'PaymentController@has_payment');
+    });
+    Route::group([
         'prefix' => 'orders'
     ], function (){
         Route::get('/','OrderController@index');
@@ -69,7 +76,7 @@ Route::group([
         Route::post('store','OrderController@store');
         Route::post('update', 'OrderController@update');
     });
-    
+
     Route::group([
         'prefix' => 'location'
     ], function (){

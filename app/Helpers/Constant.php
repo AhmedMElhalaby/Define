@@ -58,6 +58,7 @@ class Constant
         'Rejected' => 3,
         'Canceled' => 4,
         'InProgress' => 5,
+        'Payed' => 6,
         'Finished' => 6,
     ];
     const ORDER_STATUSES_STR = [

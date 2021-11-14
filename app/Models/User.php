@@ -2,12 +2,15 @@
 
 namespace App\Models;
 
+use App\Helpers\Constant;
 use App\Helpers\Functions;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Hash;
+use Laravel\Cashier\Billable;
+use Laravel\Cashier\Cashier;
 use Laravel\Passport\HasApiTokens;
 
 /**
@@ -37,7 +40,7 @@ use Laravel\Passport\HasApiTokens;
 */
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable,HasApiTokens;
+    use HasFactory, Notifiable,HasApiTokens,Billable;
 
     protected $fillable = ['name','email','mobile','type','cvr_nr','type','country_id','city_id','bio','address','device_token','device_type','avatar','lat','lng','rate','email_verified_at','mobile_verified_at','app_locale','is_active',];
 
@@ -67,8 +70,25 @@ class User extends Authenticatable
     {
         $this->attributes['password'] = Hash::make($password);
     }
-    
-    
+
+    public function deposit($amount,$ref_id = null): bool
+    {
+        Cashier::useCurrency($this->country->currency_code, $this->country->currency_symbol);
+        $charge = $this->charge($amount*100,$this->paymentMethods());
+        if($charge){
+            $Transaction = new Transaction();
+            $Transaction->setUserId($this->getId());
+            $Transaction->setRefId($ref_id);
+            $Transaction->setType(Constant::TRANSACTION_TYPES['Deposit']);
+            $Transaction->setValue($amount);
+            $Transaction->setStatus(Constant::TRANSACTION_STATUS['Paid']);
+            $Transaction->setPaymentToken($charge->id);
+            $Transaction->save();
+            return true;
+        }else{
+            return false;
+        }
+    }
         /**
      * @return int
      */

@@ -33,4 +33,35 @@ class TransactionController extends Controller
     {
         return $request->run();
     }
+    public function add_payment(Request $request){
+        $user = auth('api')->user();
+        if ($user->hasStripeId()) {
+            return $this->errorJsonResponse(__('messages.payment.has_payment'));
+        } else {
+            try{
+                $new =$user->createAsStripeCustomer($request->input('stripeToken'),['email'=>auth('api')->user()->email]);
+                $card =$user->updateCard($request->input('stripeToken'));
+            }catch (Exception $e){
+                $user->stripe_id = null;
+                $user->save();
+                return $this->errorJsonResponse($e->getMessage(),400,null,[$new]);
+            }
+            return $this->successJsonResponse([$new],'');
+        }
+    }
+    public function all_cards(Request $request){
+        if (auth('api')->user()->hasStripeId()) {
+            $cards = auth('api')->user()->defaultCard();
+            return $this->successJsonResponse([$cards],'');
+        } else{
+            return $this->errorJsonResponse(__('messages.payment.has_not_payment'),400,null,[]);
+        }
+    }
+    public function has_payment(){
+        if (auth('api')->user()->hasStripeId()) {
+            return $this->successJsonResponse([],__('messages.payment.has_payment'));
+        }else{
+            return $this->failJsonResponse([],__('messages.payment.has_not_payment'));
+        }
+    }
 }
