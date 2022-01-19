@@ -20,7 +20,7 @@ class AddPaymentRequest extends ApiRequest
             return $this->failJsonResponse([__('messages.object_exists')]);
         } else {
             try{
-                $new =$user->createAsStripeCustomer($this->stripeToken,['email'=>auth('api')->user()->email]);
+                $new =$user->createAsStripeCustomer(['name'=>auth('api')->user()->name,'email'=>auth('api')->user()->email,'phone'=>auth('api')->user()->mobile]);
                 $user->updateCard($this->stripeToken);
                 return $this->successJsonResponse([],[$new]);
             }catch (Exception $e){
